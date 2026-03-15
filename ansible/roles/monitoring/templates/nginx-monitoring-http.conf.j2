@@ -1,0 +1,12 @@
+server {
+    listen 80;
+    server_name grafana.dobro10k2.ru prometheus.dobro10k2.ru;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    location / {
+        return 200 "certbot bootstrap";
+    }
+}
