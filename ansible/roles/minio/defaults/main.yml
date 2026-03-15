@@ -1,0 +1,1 @@
+minio_bucket: "{{ vault_env_vars.STORAGE_S3_BUCKET }}"

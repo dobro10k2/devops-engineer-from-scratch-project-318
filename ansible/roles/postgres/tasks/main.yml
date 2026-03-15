@@ -1,0 +1,25 @@
+---
+- name: Create postgres data directory
+  ansible.builtin.file:
+    path: "{{ postgres_data_dir }}"
+    state: directory
+    owner: dobro10k2
+    group: docker
+    mode: "0755"
+
+- name: Run postgres container
+  community.docker.docker_container:
+    name: "{{ postgres_container_name }}"
+    image: postgres:16
+    restart_policy: always
+
+    env:
+      POSTGRES_DB: "{{ postgres_db }}"
+      POSTGRES_USER: "{{ postgres_user }}"
+      POSTGRES_PASSWORD: "{{ vault_env_vars.SPRING_DATASOURCE_PASSWORD }}"
+
+    volumes:
+      - "{{ postgres_data_dir }}:/var/lib/postgresql/data"
+
+    networks:
+      - name: "{{ docker_network_name }}"

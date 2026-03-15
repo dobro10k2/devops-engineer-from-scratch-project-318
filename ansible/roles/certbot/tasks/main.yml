@@ -1,0 +1,24 @@
+---
+- name: Install certbot
+  ansible.builtin.apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: true
+
+- name: Obtain certificate
+  ansible.builtin.command: >
+    certbot certonly --nginx
+    -d {{ certbot_domain_name }}
+    --non-interactive
+    --agree-tos
+    -m {{ certbot_email }}
+  args:
+    creates: "/etc/letsencrypt/live/{{ certbot_domain_name }}/fullchain.pem"
+
+- name: Enable certbot timer
+  ansible.builtin.systemd:
+    name: certbot.timer
+    enabled: true
+    state: started

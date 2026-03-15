@@ -1,0 +1,17 @@
+---
+- name: Configure server
+  hosts: servers
+  roles:
+    - docker_setup
+    - firewall
+    - docker_network
+    - postgres
+    - minio
+    - nginx
+    - certbot
+
+- name: Deploy application
+  hosts: servers
+  roles:
+    - role: docker_deploy
+      tags: deploy
