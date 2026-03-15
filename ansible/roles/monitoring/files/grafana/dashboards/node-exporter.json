@@ -1,6 +1,53 @@
 {
-  "title": "Node Exporter",
-  "panels": [],
-  "schemaVersion": 16,
+  "title": "System Resources",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "CPU Usage",
+      "targets": [
+        {
+          "expr": "rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])",
+          "legendFormat": "{{cpu}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "System Load",
+      "targets": [
+        {
+          "expr": "node_load1"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory Usage",
+      "targets": [
+        {
+          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Disk Usage",
+      "targets": [
+        {
+          "expr": "(node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Network Traffic",
+      "targets": [
+        {
+          "expr": "rate(node_network_receive_bytes_total[5m])"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
   "version": 1
 }

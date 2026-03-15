@@ -291,3 +291,16 @@ The following dashboards are included:
 | HTTP Status Codes   | request counts and response codes  |
 
 ---
+
+## Screenshots
+
+### System Metrics Dashboard
+![System metrics](assets/system-metrics.png)
+
+### Application Metrics Dashboard
+![Application metrics](assets/application-metrics.png)
+
+### Prometheus Targets
+![Prometheus targets](assets/prometheus-targets.png)
+
+---

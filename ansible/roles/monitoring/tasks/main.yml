@@ -1,5 +1,14 @@
 ---
 #
+# Docker network for monitoring
+#
+
+- name: Create monitoring docker network
+  community.docker.docker_network:
+    name: monitoring
+
+
+#
 # Prometheus setup
 #
 
@@ -38,7 +47,10 @@
     restart_policy: always
 
     ports:
-      - "{{ prometheus_port }}:9090"
+      - "127.0.0.1:9090:9090"
+
+    networks:
+      - name: monitoring
 
     volumes:
       - "{{ prometheus_config_dir }}/prometheus.yml:/etc/prometheus/prometheus.yml"
@@ -49,12 +61,13 @@
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
 
+
 #
 # Grafana setup
 #
 
 - name: Create Grafana directories
-  ansible.builtin.file:
+  file:
     path: "{{ item }}"
     state: directory
     owner: "472"
@@ -65,19 +78,26 @@
     - "{{ grafana_provisioning_dir }}"
     - "{{ grafana_data_dir }}/dashboards"
 
-- name: Copy Grafana provisioning files
-  ansible.builtin.copy:
-    src: grafana/provisioning/
-    dest: "{{ grafana_provisioning_dir }}/"
-    mode: "0644"
-    notify: restart grafana
+- name: Copy Grafana datasource config
+  copy:
+    src: grafana/provisioning/datasources/datasource.yml
+    dest: "{{ grafana_provisioning_dir }}/datasources/datasource.yml"
+  notify: restart grafana
+
+- name: Copy Grafana dashboards provisioning
+  copy:
+    src: grafana/provisioning/dashboards/dashboards.yml
+    dest: "{{ grafana_provisioning_dir }}/dashboards/dashboards.yml"
+  notify: restart grafana
 
 - name: Copy Grafana dashboards
-  ansible.builtin.copy:
+  copy:
     src: grafana/dashboards/
     dest: "{{ grafana_data_dir }}/dashboards/"
+    owner: "472"
+    group: "472"
     mode: "0644"
-    notify: restart grafana
+  notify: restart grafana
 
 - name: Run Grafana container
   community.docker.docker_container:
@@ -86,15 +106,22 @@
     restart_policy: always
 
     ports:
-      - "{{ grafana_port }}:3000"
+      - "127.0.0.1:3000:3000"
+
+    networks:
+      - name: monitoring
 
     env:
       GF_SECURITY_ADMIN_USER: "{{ grafana_admin_user }}"
       GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+      GF_SERVER_ROOT_URL: https://grafana.dobro10k2.ru
+      GF_SERVER_DOMAIN: grafana.dobro10k2.ru
+      GF_SERVER_SERVE_FROM_SUB_PATH: "false"
 
     volumes:
       - "{{ grafana_data_dir }}:/var/lib/grafana"
       - "{{ grafana_provisioning_dir }}:/etc/grafana/provisioning"
+
 
 #
 # Install nginx and certbot
@@ -136,7 +163,22 @@
 
 
 #
-# Obtain certificates
+# Check if certificates exist
+#
+
+- name: Check Grafana certificate
+  stat:
+    path: /etc/letsencrypt/live/grafana.dobro10k2.ru/fullchain.pem
+  register: grafana_cert
+
+- name: Check Prometheus certificate
+  stat:
+    path: /etc/letsencrypt/live/prometheus.dobro10k2.ru/fullchain.pem
+  register: prometheus_cert
+
+
+#
+# Obtain certificates (only if missing)
 #
 
 - name: Obtain Grafana certificate
@@ -146,6 +188,7 @@
     --non-interactive
     --agree-tos
     -m admin@dobro10k2.ru
+  when: not grafana_cert.stat.exists
 
 - name: Obtain Prometheus certificate
   command: >
@@ -154,6 +197,7 @@
     --non-interactive
     --agree-tos
     -m admin@dobro10k2.ru
+  when: not prometheus_cert.stat.exists
 
 
 #
@@ -169,4 +213,3 @@
   service:
     name: nginx
     state: reloaded
-

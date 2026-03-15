@@ -1,6 +1,43 @@
 {
   "title": "Application Metrics",
-  "panels": [],
-  "schemaVersion": 16,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Application Uptime",
+      "targets": [
+        {
+          "expr": "process_uptime_seconds"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM Memory Used",
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM Threads",
+      "targets": [
+        {
+          "expr": "jvm_threads_live_threads"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Application Start Time",
+      "targets": [
+        {
+          "expr": "application_started_time_seconds"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
   "version": 1
 }
