@@ -95,3 +95,78 @@
     volumes:
       - "{{ grafana_data_dir }}:/var/lib/grafana"
       - "{{ grafana_provisioning_dir }}:/etc/grafana/provisioning"
+
+#
+# Install nginx and certbot
+#
+
+- name: Install nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: true
+
+- name: Install certbot
+  apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+
+
+#
+# Deploy HTTP nginx config (bootstrap for certbot)
+#
+
+- name: Deploy HTTP nginx config
+  template:
+    src: nginx-monitoring-http.conf.j2
+    dest: /etc/nginx/sites-available/monitoring
+
+- name: Enable nginx site
+  file:
+    src: /etc/nginx/sites-available/monitoring
+    dest: /etc/nginx/sites-enabled/monitoring
+    state: link
+
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded
+
+
+#
+# Obtain certificates
+#
+
+- name: Obtain Grafana certificate
+  command: >
+    certbot certonly --nginx
+    -d grafana.dobro10k2.ru
+    --non-interactive
+    --agree-tos
+    -m admin@dobro10k2.ru
+
+- name: Obtain Prometheus certificate
+  command: >
+    certbot certonly --nginx
+    -d prometheus.dobro10k2.ru
+    --non-interactive
+    --agree-tos
+    -m admin@dobro10k2.ru
+
+
+#
+# Deploy HTTPS nginx config
+#
+
+- name: Deploy HTTPS nginx config
+  template:
+    src: nginx-monitoring-https.conf.j2
+    dest: /etc/nginx/sites-available/monitoring
+
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded
+

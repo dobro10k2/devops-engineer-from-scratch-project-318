@@ -214,7 +214,7 @@ These metrics can later be collected by **Prometheus** and visualized using **Gr
 # Prometheus URL:
 
 ```
-http://158.160.5.244:9090
+https://prometheus.dobro10k2.ru
 ```
 
 Check targets:
@@ -222,5 +222,72 @@ Check targets:
 ```
 up == 1
 ```
+
+---
+
+## Grafana
+
+Grafana is deployed on the monitoring server and visualizes metrics collected by Prometheus.
+
+**URL**
+
+```
+https://grafana.dobro10k2.ru
+```
+
+**Login**
+
+```
+admin
+```
+
+Password is stored in Ansible Vault.
+
+---
+
+## Dashboards
+
+Grafana dashboards are provisioned automatically during deployment.
+
+Provisioning files are located in:
+
+```
+ansible/roles/monitoring/files/grafana/provisioning
+```
+
+Dashboards are stored in:
+
+```
+ansible/roles/monitoring/files/grafana/dashboards
+```
+
+To apply dashboard updates run:
+
+```
+make ansible
+```
+
+---
+
+## Data Sources
+
+Configured automatically via provisioning:
+
+| Data source | Purpose                          |
+| ----------- | -------------------------------- |
+| Prometheus  | metrics collection               |
+| Loki        | logs (prepared for future steps) |
+
+---
+
+## Dashboards Overview
+
+The following dashboards are included:
+
+| Dashboard           | Description                        |
+| ------------------- | ---------------------------------- |
+| System Resources    | CPU, memory, disk, network metrics |
+| Application Metrics | JVM metrics, uptime, HTTP requests |
+| HTTP Status Codes   | request counts and response codes  |
 
 ---
