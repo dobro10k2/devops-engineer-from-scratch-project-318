@@ -9,3 +9,5 @@ grafana_port: 3000
 
 grafana_data_dir: /opt/grafana
 grafana_provisioning_dir: /opt/grafana/provisioning
+
+monitoring_docker_network: monitoring
