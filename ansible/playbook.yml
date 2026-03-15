@@ -1,6 +1,6 @@
 ---
 - name: Configure server
-  hosts: servers
+  hosts: app
   roles:
     - docker_setup
     - firewall
@@ -12,7 +12,15 @@
     - node_exporter
 
 - name: Deploy application
-  hosts: servers
+  hosts: app
   roles:
     - role: docker_deploy
       tags: deploy
+
+- hosts: monitoring
+  become: true
+
+  roles:
+    - firewall
+    - docker_setup
+    - prometheus

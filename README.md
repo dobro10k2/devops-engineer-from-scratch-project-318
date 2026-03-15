@@ -209,3 +209,18 @@ Application metrics are exported via **Spring Boot Actuator** using **Micrometer
 
 These metrics can later be collected by **Prometheus** and visualized using **Grafana**.
 
+---
+
+# Prometheus URL:
+
+```
+http://158.160.5.244:9090
+```
+
+Проверка таргетов:
+
+```
+up == 1
+```
+
+---
