@@ -217,7 +217,7 @@ These metrics can later be collected by **Prometheus** and visualized using **Gr
 http://158.160.5.244:9090
 ```
 
-Проверка таргетов:
+Check targets:
 
 ```
 up == 1
