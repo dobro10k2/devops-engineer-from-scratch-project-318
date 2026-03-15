@@ -23,4 +23,4 @@
   roles:
     - firewall
     - docker_setup
-    - prometheus
+    - monitoring

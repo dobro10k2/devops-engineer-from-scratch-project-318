@@ -1,3 +1,8 @@
+---
+#
+# Prometheus setup
+#
+
 - name: Create directories
   file:
     path: "{{ item }}"
@@ -43,3 +48,50 @@
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
+
+#
+# Grafana setup
+#
+
+- name: Create Grafana directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "472"
+    group: "472"
+    mode: "0755"
+  loop:
+    - "{{ grafana_data_dir }}"
+    - "{{ grafana_provisioning_dir }}"
+    - "{{ grafana_data_dir }}/dashboards"
+
+- name: Copy Grafana provisioning files
+  ansible.builtin.copy:
+    src: grafana/provisioning/
+    dest: "{{ grafana_provisioning_dir }}/"
+    mode: "0644"
+    notify: restart grafana
+
+- name: Copy Grafana dashboards
+  ansible.builtin.copy:
+    src: grafana/dashboards/
+    dest: "{{ grafana_data_dir }}/dashboards/"
+    mode: "0644"
+    notify: restart grafana
+
+- name: Run Grafana container
+  community.docker.docker_container:
+    name: grafana
+    image: "{{ grafana_image }}"
+    restart_policy: always
+
+    ports:
+      - "{{ grafana_port }}:3000"
+
+    env:
+      GF_SECURITY_ADMIN_USER: "{{ grafana_admin_user }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+
+    volumes:
+      - "{{ grafana_data_dir }}:/var/lib/grafana"
+      - "{{ grafana_provisioning_dir }}:/etc/grafana/provisioning"

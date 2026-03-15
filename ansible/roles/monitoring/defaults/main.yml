@@ -1,6 +1,11 @@
 prometheus_image: prom/prometheus:latest
+grafana_image: grafana/grafana:latest
 
 prometheus_config_dir: /opt/prometheus
 prometheus_data_dir: /opt/prometheus/data
 
 prometheus_port: 9090
+grafana_port: 3000
+
+grafana_data_dir: /opt/grafana
+grafana_provisioning_dir: /opt/grafana/provisioning
