@@ -1,0 +1,7 @@
+- name: Create bucket
+  community.docker.docker_container_exec:
+    container: "{{ minio_container_name }}"
+    command: >
+      mc alias set local http://localhost:9000
+      {{ vault_env_vars.STORAGE_S3_ACCESSKEY }}
+      {{ vault_env_vars.STORAGE_S3_SECRETKEY }}

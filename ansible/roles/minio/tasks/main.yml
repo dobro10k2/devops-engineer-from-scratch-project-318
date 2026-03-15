@@ -1,0 +1,67 @@
+---
+- name: Create MinIO data directory
+  ansible.builtin.file:
+    path: "{{ minio_data_dir }}"
+    state: directory
+    owner: dobro10k2
+    group: docker
+    mode: "0755"
+
+- name: Run MinIO container
+  community.docker.docker_container:
+    name: "{{ minio_container_name }}"
+    image: minio/minio:latest
+    image_name_mismatch: recreate
+    restart_policy: always
+    recreate: true
+    command: server /data --console-address ":9001"
+
+    env:
+      MINIO_ROOT_USER: "{{ vault_env_vars.STORAGE_S3_ACCESSKEY }}"
+      MINIO_ROOT_PASSWORD: "{{ vault_env_vars.STORAGE_S3_SECRETKEY }}"
+
+    volumes:
+      - "{{ minio_data_dir }}:/data"
+
+    networks:
+      - name: "{{ docker_network_name }}"
+        aliases:
+          - minio
+          - bulletins.minio
+
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+
+- name: Wait for MinIO API
+  ansible.builtin.uri:
+    url: http://127.0.0.1:9000/minio/health/live
+    method: GET
+  register: minio_health
+  retries: 10
+  delay: 3
+  until: minio_health.status == 200
+
+- name: Configure mc alias inside MinIO container
+  ansible.builtin.command: >
+    docker exec {{ minio_container_name }}
+    mc alias set local http://127.0.0.1:9000
+    {{ vault_env_vars.STORAGE_S3_ACCESSKEY }}
+    {{ vault_env_vars.STORAGE_S3_SECRETKEY }}
+  register: minio_mc_alias
+  changed_when: false
+
+- name: Create bucket if not exists
+  ansible.builtin.command: >
+    docker exec {{ minio_container_name }}
+    mc mb --ignore-existing local/{{ vault_env_vars.STORAGE_S3_BUCKET }}
+  register: minio_bucket_create
+  changed_when: "'created' in minio_bucket_create.stdout | lower"
+  failed_when: false
+
+- name: Set bucket public policy
+  ansible.builtin.command: >
+    docker exec {{ minio_container_name }}
+    mc anonymous set download local/{{ vault_env_vars.STORAGE_S3_BUCKET }}
+  register: minio_bucket_policy
+  changed_when: "'access permission' in minio_bucket_policy.stdout | lower"

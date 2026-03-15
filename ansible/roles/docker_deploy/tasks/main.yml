@@ -1,0 +1,38 @@
+---
+- name: Set docker tag
+  ansible.builtin.set_fact:
+    docker_deploy_image_tag: "{{ docker_tag | default('latest') }}"
+
+- name: Create log directory
+  ansible.builtin.file:
+    path: "{{ app_logs_dir }}"
+    state: directory
+    owner: dobro10k2
+    group: docker
+    mode: "0755"
+
+- name: Pull docker image
+  community.docker.docker_image:
+    name: "{{ docker_image }}"
+    tag: "{{ docker_deploy_image_tag }}"
+    source: pull
+
+- name: Run application container
+  community.docker.docker_container:
+    name: "{{ app_name }}"
+    image: "{{ docker_image }}:{{ docker_deploy_image_tag }}"
+    image_name_mismatch: recreate
+    restart_policy: always
+    recreate: true
+
+    networks:
+      - name: "{{ docker_network_name }}"
+
+    ports:
+      - "{{ app_port }}:8080"
+      - "{{ management_port }}:9090"
+
+    env: "{{ env_vars | combine(vault_env_vars) }}"
+
+    volumes:
+      - "{{ app_logs_dir }}:/logs"
