@@ -29,3 +29,13 @@ minio_data_dir: /opt/minio/data
 
 minio_console_port: 9001
 minio_api_port: 9000
+
+prometheus_targets:
+
+  node_exporter:
+    - "10.129.0.16:9100"
+
+  application:
+    - "10.129.0.16:9090"
+
+monitoring_server_ip: 158.160.5.244

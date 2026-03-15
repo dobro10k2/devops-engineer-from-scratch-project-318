@@ -1,0 +1,6 @@
+prometheus_image: prom/prometheus:latest
+
+prometheus_config_dir: /opt/prometheus
+prometheus_data_dir: /opt/prometheus/data
+
+prometheus_port: 9090
