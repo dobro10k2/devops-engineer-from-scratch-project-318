@@ -9,6 +9,7 @@
     - minio
     - nginx
     - certbot
+    - node_exporter
 
 - name: Deploy application
   hosts: servers
