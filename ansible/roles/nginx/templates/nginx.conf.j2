@@ -13,20 +13,35 @@ log_format json escape=json
 access_log /var/log/nginx/access.log json;
 error_log /var/log/nginx/error.log;
 
+# --- HTTP server (handles ACME + redirect + nginx_status) ---
 server {
     listen 80;
     server_name board.dobro10k2.ru;
 
+    # Allow Certbot challenges for Let's Encrypt
     location /.well-known/acme-challenge/ {
         root /var/www/html;
     }
 
+    # Nginx stub_status endpoint for Prometheus exporter
+    # Must be defined BEFORE redirect to avoid 301 response
+    location /nginx_status {
+        stub_status;
+        access_log off;
+
+        # Allow only local machine and monitoring server
+        allow 127.0.0.1;
+        allow 10.129.0.25;
+        deny all;
+    }
+
+    # Redirect all other HTTP traffic to HTTPS
     location / {
         return 301 https://$host$request_uri;
     }
 }
 
-
+# --- HTTPS server (main application entrypoint) ---
 server {
 
     listen 443 ssl http2;
@@ -40,44 +55,42 @@ server {
 
     client_max_body_size 20m;
 
+    # Main application
     location / {
-
         proxy_pass http://127.0.0.1:8080/;
 
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
     }
 
+    # API endpoints
     location /api/ {
         proxy_pass http://127.0.0.1:8080;
     }
 
+    # Swagger UI
     location /swagger-ui/ {
         proxy_pass http://127.0.0.1:8080;
     }
 
+    # Static files (with caching)
     location /static/ {
         proxy_pass http://127.0.0.1:8080;
         expires 7d;
     }
 
+    # MinIO storage proxy
     location /storage/ {
-
         proxy_pass http://127.0.0.1:9000/;
-
         proxy_set_header Host $host;
-
     }
 
+    # Spring Boot Actuator metrics
     location /actuator/ {
+        proxy_pass http://127.0.0.1:9090;
 
-    proxy_pass http://127.0.0.1:9090;
-
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-
-    } 
-
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
 }

@@ -20,3 +20,10 @@ scrape_configs:
 {% for target in prometheus_targets.application %}
         - "{{ target }}"
 {% endfor %}
+
+  - job_name: nginx
+    static_configs:
+      - targets:
+{% for target in prometheus_targets.nginx %}
+        - "{{ target }}"
+{% endfor %}

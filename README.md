@@ -295,6 +295,106 @@ Telegram
 
 ---
 
+## Nginx Monitoring
+
+### stub_status
+
+Nginx exposes metrics via the `stub_status` module:
+
+```
+http://10.129.0.16/nginx_status
+```
+
+Access is restricted:
+
+* allowed: 10.129.0.25 (monitoring server)
+* denied for others
+
+---
+
+### Verification
+
+#### Check stub_status
+
+```bash
+curl http://10.129.0.16/nginx_status
+```
+
+Expected output:
+
+```
+Active connections: 1
+Reading: 0 Writing: 1 Waiting: 0
+```
+
+---
+
+#### Check nginx exporter
+
+```bash
+curl http://localhost:9113/metrics | grep nginx_
+```
+
+---
+
+#### Check Prometheus
+
+```
+https://prometheus.dobro10k2.ru
+```
+
+Query:
+
+```
+nginx_connections_active
+```
+
+---
+
+## Grafana
+
+```
+https://grafana.dobro10k2.ru
+```
+
+Dashboards:
+
+* Nginx Metrics
+* HTTP Metrics
+
+---
+
+## 5xx Monitoring
+
+5xx errors are collected from application metrics (Spring Boot + Micrometer).
+
+Nginx exporter does not provide HTTP status codes.
+
+---
+
+### Trigger 5xx errors
+
+```bash
+docker stop postgres
+docker restart <app_container>
+```
+
+Then generate requests:
+
+```bash
+for i in {1..10}; do curl -s -o /dev/null https://board.dobro10k2.ru/api/bulletins; done
+```
+
+---
+
+### Grafana query (avoid "No data")
+
+```
+increase(http_server_requests_seconds_count{status=~"5.."}[1d])
+```
+
+---
+
 # Screenshots
 
 ### System Metrics
@@ -309,6 +409,10 @@ Telegram
 
 ![HTTP](assets/http-metrics.png)
 
+### Nginx Metrics
+
+![Nginx](assets/nginx-metrics.png)
+
 ### Status Page
 
 ![Status](assets/status-page.png)
@@ -321,6 +425,14 @@ Telegram
 
 ![Alert](assets/alert-fired.png)
 ![Alert](assets/alert-fired-telegram.png)
+
+### 5xx Errors
+
+![5xx](assets/5xx-errors.png)
+
+### Prometheus 5xx Errors
+
+![5xx](assets/prometheus-5xx-errors.png)
 
 ---
 

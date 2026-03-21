@@ -11,3 +11,6 @@ grafana_data_dir: /opt/grafana
 grafana_provisioning_dir: /opt/grafana/provisioning
 
 monitoring_docker_network: monitoring
+
+nginx_exporter_image: nginx/nginx-prometheus-exporter:1.1.0
+nginx_exporter_port: 9113

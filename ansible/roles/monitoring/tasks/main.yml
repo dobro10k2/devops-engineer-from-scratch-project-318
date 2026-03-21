@@ -229,4 +229,16 @@
 - name: Reload nginx
   service:
     name: nginx
-    state: reloaded
+
+- name: Run nginx prometheus exporter
+  community.docker.docker_container:
+    name: nginx-exporter
+    image: "{{ nginx_exporter_image }}"
+    state: started
+    restart_policy: always
+    command:
+      - "-nginx.scrape-uri={{ nginx_status_url }}"
+    networks:
+      - name: "{{ monitoring_docker_network }}"
+    ports:
+      - "127.0.0.1:{{ nginx_exporter_port }}:9113"

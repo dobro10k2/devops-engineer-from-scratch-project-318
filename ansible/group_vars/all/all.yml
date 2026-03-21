@@ -38,4 +38,9 @@ prometheus_targets:
   application:
     - "10.129.0.16:9090"
 
-monitoring_server_ip: 158.160.5.244
+  nginx:
+    - "nginx-exporter:9113"
+
+monitoring_server_ip: 10.129.0.25
+
+nginx_status_url: "http://10.129.0.16/nginx_status"
