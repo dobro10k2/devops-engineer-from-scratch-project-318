@@ -1,0 +1,286 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: system-alerts
+    folder: General
+    interval: 1m
+
+    rules:
+
+      # 🔴 APPLICATION DOWN
+      - uid: application-down
+        title: Application Down
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: up{job="application"}
+              refId: A
+
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+
+        noDataState: OK
+        execErrState: Alerting
+        for: 2m
+        annotations:
+          summary: "Application is DOWN"
+        labels:
+          severity: critical
+          service: application
+
+      # 🔴 HIGH CPU
+      - uid: high-cpu
+        title: High CPU Usage
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+              refId: A
+
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [80]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+
+        for: 5m
+        noDataState: OK
+        annotations:
+          summary: "CPU > 80%"
+        labels:
+          severity: warning
+          service: system
+
+      # 🔴 HIGH MEMORY
+      - uid: high-memory
+        title: High Memory Usage
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+              refId: A
+
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [80]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+
+        for: 5m
+        noDataState: OK
+        annotations:
+          summary: "RAM > 80%"
+        labels:
+          severity: warning
+          service: system
+
+      # 🔴 DISK
+      - uid: disk-full
+        title: Disk Almost Full
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"}) * 100
+              refId: A
+
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [20]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+
+        for: 5m
+        noDataState: OK
+        annotations:
+          summary: "Disk < 20%"
+        labels:
+          severity: warning
+          service: system
+
+      # 🔴 NO METRICS
+      - uid: no-metrics
+        title: No Metrics
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: absent(up{job="application"})
+              refId: A
+
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+
+        for: 5m
+        noDataState: OK
+        annotations:
+          summary: "Нет метрик от приложения"
+        labels:
+          severity: critical
+          service: application
+
+      # 🔴 5XX
+      - uid: high-5xx
+        title: High 5xx rate
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+              refId: A
+
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+
+        for: 2m
+        noDataState: OK
+        annotations:
+          summary: "Есть ошибки 5xx"
+        labels:
+          severity: warning
+          service: application

@@ -3,13 +3,13 @@
 
 # Bulletin Board Observability Infrastructure
 
-Infrastructure for the **Bulletin Board application** built as part of the **Hexlet DevOps Engineer from Scratch program**, providing containerized deployment and basic observability using Ansible, Docker, Node Exporter, and Spring Boot Actuator.
+Infrastructure for the **Bulletin Board application** built as part of the **Hexlet DevOps Engineer from Scratch program**, providing containerized deployment and full observability using Ansible, Docker, Prometheus, and Grafana.
 
 ---
 
 # Project Overview
 
-This repository contains the **infrastructure code** used to deploy the application and prepare the host for observability.
+This repository contains the **infrastructure code** used to deploy the application and implement observability.
 
 The infrastructure is provisioned using **Ansible** and runs the application inside **Docker** containers.
 
@@ -21,14 +21,14 @@ The project implements:
 * PostgreSQL database container
 * reverse proxy using **NGINX**
 * HTTPS certificates issued by **Let’s Encrypt**
-* host monitoring using **Prometheus Node Exporter**
+* monitoring using **Prometheus**
+* visualization and alerting using **Grafana**
+* host monitoring using **Node Exporter**
 * application metrics using **Spring Boot Actuator** and **Micrometer**
 
 ---
 
 # Application URL
-
-Application is accessible at:
 
 ```
 https://board.dobro10k2.ru
@@ -55,23 +55,20 @@ https://board.dobro10k2.ru
         ├── docker_setup
         ├── firewall
         ├── minio
+        ├── monitoring
         ├── nginx
         ├── postgres
         └── node_exporter
 ```
 
-All infrastructure configuration files are located in the **ansible/** directory.
-
 ---
 
 # Deployment Commands
 
-Deployment is performed using the Makefile.
-
 ### Initial deployment
 
 ```
-make ansible
+make setup
 ```
 
 ### Deploy new application version
@@ -80,46 +77,29 @@ make ansible
 make deploy
 ```
 
-### Rollback to specific image
+### Rollback
 
 ```
 make rollback TAG=<docker_tag>
-```
-
-The deployment uses a Docker image from **GitHub Container Registry**.
-
-Example image:
-
-```
-ghcr.io/dobro10k2/project-devops-deploy:<git_sha>
 ```
 
 ---
 
 # Infrastructure Components
 
-The application server runs the following services:
-
 ```
 VM
 │
-├── Nginx reverse proxy
+├── Nginx
 ├── Node Exporter
 │
 ├── Docker
-│   ├── application container
-│   ├── PostgreSQL container
-│   └── MinIO container
+│   ├── Application
+│   ├── PostgreSQL
+│   ├── MinIO
+│   ├── Prometheus
+│   └── Grafana
 ```
-
-Ports used:
-
-| Port     | Service                          |
-| -------- | -------------------------------- |
-| 80 / 443 | Nginx                            |
-| 8080     | Application                      |
-| 9090     | Application management / metrics |
-| 9100     | Node Exporter                    |
 
 ---
 
@@ -131,12 +111,6 @@ Ports used:
 http://localhost:9090/actuator/prometheus
 ```
 
-### Health check
-
-```
-https://board.dobro10k2.ru/actuator/health
-```
-
 ### Host metrics
 
 ```
@@ -145,73 +119,7 @@ http://localhost:9100/metrics
 
 ---
 
-# Verification Commands
-
-### Check host metrics
-
-```
-curl http://localhost:9100/metrics | head
-```
-
-### Check application metrics
-
-```
-curl http://localhost:9090/actuator/prometheus | head
-```
-
-### Check application health
-
-```
-curl https://board.dobro10k2.ru/actuator/health
-```
-
-Expected response:
-
-```
-{"status":"UP"}
-```
-
----
-
-# Required Metrics
-
-The following metrics are exported and intended to be collected by Prometheus.
-
-## Host Metrics
-
-| Metric                           | Description              |
-| -------------------------------- | ------------------------ |
-| node_cpu_seconds_total           | CPU usage time           |
-| node_load1                       | 1 minute system load     |
-| node_memory_MemAvailable_bytes   | available memory         |
-| node_filesystem_size_bytes       | filesystem capacity      |
-| node_network_receive_bytes_total | incoming network traffic |
-
----
-
-## Application Metrics
-
-| Metric                             | Description              |
-| ---------------------------------- | ------------------------ |
-| application_started_time_seconds   | application startup time |
-| process_uptime_seconds             | application uptime       |
-| http_server_requests_seconds_count | HTTP request count       |
-| jvm_memory_used_bytes              | JVM memory usage         |
-| disk_free_bytes                    | free disk space          |
-
----
-
-# Observability Setup
-
-Host metrics are exported by **Prometheus Node Exporter**.
-
-Application metrics are exported via **Spring Boot Actuator** using **Micrometer**.
-
-These metrics can later be collected by **Prometheus** and visualized using **Grafana**.
-
----
-
-# Prometheus URL:
+# Prometheus
 
 ```
 https://prometheus.dobro10k2.ru
@@ -225,82 +133,217 @@ up == 1
 
 ---
 
-## Grafana
-
-Grafana is deployed on the monitoring server and visualizes metrics collected by Prometheus.
-
-**URL**
+# Grafana
 
 ```
 https://grafana.dobro10k2.ru
 ```
 
-**Login**
+Login:
 
 ```
 admin
 ```
 
-Password is stored in Ansible Vault.
+Password stored in Vault.
 
 ---
 
-## Dashboards
+# Dashboards
 
-Grafana dashboards are provisioned automatically during deployment.
-
-Provisioning files are located in:
-
-```
-ansible/roles/monitoring/files/grafana/provisioning
-```
-
-Dashboards are stored in:
+Dashboards are provisioned automatically:
 
 ```
 ansible/roles/monitoring/files/grafana/dashboards
 ```
 
-To apply dashboard updates run:
+## Available dashboards
+
+| Dashboard           | Description                         |
+| ------------------- | ----------------------------------- |
+| Status Page         | overall system health               |
+| System Metrics      | CPU, memory, disk, network          |
+| Application Metrics | RPS, latency, uptime                |
+| HTTP Metrics        | request rates, status codes, errors |
+
+---
+
+# Status Page
+
+Provides a quick overview:
+
+* Application status (UP / DOWN)
+* CPU usage
+* Memory usage
+* Disk usage
+* 5xx errors
+
+This dashboard directly reflects alert rules.
+
+---
+
+# Alerting
+
+Alerting is configured via Grafana provisioning.
+
+## Config location
 
 ```
-make ansible
+ansible/roles/monitoring/files/grafana/provisioning/alerting
+```
+
+## Files
+
+* rules.yml — alert rules
+* policies.yml — routing
+* contactpoints.yml — notification channels
+
+---
+
+# Notification Channel
+
+Alerts are sent to **Telegram Bot API**.
+
+Secrets are stored in Vault:
+
+```
+telegram_bot_token
+telegram_chat_id
 ```
 
 ---
 
-## Data Sources
+# Implemented Alerts
 
-Configured automatically via provisioning:
+| Alert            | Description            |
+| ---------------- | ---------------------- |
+| Application Down | app is not responding  |
+| High CPU         | CPU > 80%              |
+| High Memory      | RAM > 80%              |
+| Disk Almost Full | < 20% free space       |
+| No Metrics       | metrics missing        |
+| High 5xx         | server errors detected |
 
-| Data source | Purpose                          |
-| ----------- | -------------------------------- |
-| Prometheus  | metrics collection               |
-| Loki        | logs (prepared for future steps) |
+All alerts include:
 
----
-
-## Dashboards Overview
-
-The following dashboards are included:
-
-| Dashboard           | Description                        |
-| ------------------- | ---------------------------------- |
-| System Resources    | CPU, memory, disk, network metrics |
-| Application Metrics | JVM metrics, uptime, HTTP requests |
-| HTTP Status Codes   | request counts and response codes  |
+* severity label
+* service label
 
 ---
 
-## Screenshots
+# How to View Alerts
 
-### System Metrics Dashboard
-![System metrics](assets/system-metrics.png)
+Grafana → Alerting → Alert rules
 
-### Application Metrics Dashboard
-![Application metrics](assets/application-metrics.png)
+---
+
+# How to Trigger Alerts
+
+### Application Down
+
+```
+docker stop <app_container>
+```
+
+---
+
+### High CPU
+
+```
+yes > /dev/null
+```
+
+---
+
+### 5xx Errors
+
+```
+curl https://board.dobro10k2.ru/invalid-endpoint
+```
+
+---
+
+### No Metrics
+
+Stop application or block metrics endpoint.
+
+---
+
+# Alerting Flow
+
+```
+Application / Node Exporter
+        ↓
+Prometheus
+        ↓
+Grafana Alerting
+        ↓
+Telegram
+```
+
+---
+
+# Verification
+
+1. Open Grafana
+2. Trigger alert
+3. Verify:
+
+   * alert appears in Grafana
+   * Telegram notification received
+   * dashboard reflects issue
+
+---
+
+# Screenshots
+
+### System Metrics
+
+![System](assets/system-metrics.png)
+
+### Application Metrics
+
+![App](assets/application-metrics.png)
+
+### HTTTP Metrics
+
+![HTTP](assets/http-metrics.png)
+
+### Status Page
+
+![Status](assets/status-page.png)
 
 ### Prometheus Targets
-![Prometheus targets](assets/prometheus-targets.png)
+
+![Targets](assets/prometheus-targets.png)
+
+### Alert Fired
+
+![Alert](assets/alert-fired.png)
+![Alert](assets/alert-fired-telegram.png)
 
 ---
+
+# Conclusion
+
+The project implements a full observability stack:
+
+* metrics collection (Prometheus)
+* visualization (Grafana dashboards)
+* alerting (Grafana Alerting + Telegram)
+
+This setup allows detecting and reacting to:
+
+* application failures
+* resource exhaustion
+* error spikes
+* missing telemetry
+
+---
+
+# Notes
+
+All sensitive data is stored in Ansible Vault.
+
+Deployment is fully reproducible using Makefile commands.
+

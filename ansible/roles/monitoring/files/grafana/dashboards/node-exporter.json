@@ -1,53 +1,47 @@
 {
-  "title": "System Resources",
+  "title": "System Metrics",
+  "schemaVersion": 38,
+  "version": 1,
   "panels": [
     {
       "type": "timeseries",
-      "title": "CPU Usage",
+      "title": "CPU Usage %",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])",
-          "legendFormat": "{{cpu}}"
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "System Load",
+      "title": "Memory Usage %",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "node_load1"
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "Memory Usage",
+      "title": "Disk Usage %",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes"
+          "expr": "(1 - (node_filesystem_avail_bytes{fstype!=\"tmpfs\"} / node_filesystem_size_bytes{fstype!=\"tmpfs\"})) * 100"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "Disk Usage",
-      "targets": [
-        {
-          "expr": "(node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes"
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Network Traffic",
+      "title": "Network RX",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
       "targets": [
         {
           "expr": "rate(node_network_receive_bytes_total[5m])"
         }
       ]
     }
-  ],
-  "schemaVersion": 38,
-  "version": 1
+  ]
 }

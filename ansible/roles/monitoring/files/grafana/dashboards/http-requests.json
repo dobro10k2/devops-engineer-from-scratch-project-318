@@ -1,43 +1,47 @@
 {
-  "title": "HTTP Requests",
+  "title": "HTTP Metrics",
+  "schemaVersion": 38,
+  "version": 1,
   "panels": [
     {
       "type": "timeseries",
-      "title": "Total Requests",
+      "title": "Requests per second",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "rate(http_server_requests_seconds_count[5m])"
+          "expr": "sum(rate(http_server_requests_seconds_count[1m]))"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "2xx Responses",
+      "title": "5xx Errors",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "rate(http_server_requests_seconds_count{status=~\"2..\"}[5m])"
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m]))"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "4xx Responses",
+      "title": "Requests by status",
+      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
       "targets": [
         {
-          "expr": "rate(http_server_requests_seconds_count{status=~\"4..\"}[5m])"
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count[5m]))"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "5xx Responses",
+      "title": "Latency",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 },
       "targets": [
         {
-          "expr": "rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])"
+          "expr": "rate(http_server_requests_seconds_sum[5m]) / rate(http_server_requests_seconds_count[5m])"
         }
       ]
     }
-  ],
-  "schemaVersion": 38,
-  "version": 1
+  ]
 }

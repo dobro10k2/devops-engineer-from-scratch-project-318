@@ -77,6 +77,9 @@
     - "{{ grafana_data_dir }}"
     - "{{ grafana_provisioning_dir }}"
     - "{{ grafana_data_dir }}/dashboards"
+    - "{{ grafana_provisioning_dir }}/alerting"
+    - "{{ grafana_provisioning_dir }}/datasources"
+    - "{{ grafana_provisioning_dir }}/dashboards"
 
 - name: Copy Grafana datasource config
   copy:
@@ -99,6 +102,18 @@
     mode: "0644"
   notify: restart grafana
 
+- name: Deploy Grafana contact points with secrets
+  template:
+    src: grafana/contactpoints.yml.j2
+    dest: "{{ grafana_provisioning_dir }}/alerting/contactpoints.yml"
+  notify: restart grafana
+
+- name: Copy Grafana alerting provisioning
+  copy:
+    src: grafana/provisioning/alerting/
+    dest: "{{ grafana_provisioning_dir }}/alerting/"
+  notify: restart grafana
+
 - name: Run Grafana container
   community.docker.docker_container:
     name: grafana
@@ -117,6 +132,8 @@
       GF_SERVER_ROOT_URL: https://grafana.dobro10k2.ru
       GF_SERVER_DOMAIN: grafana.dobro10k2.ru
       GF_SERVER_SERVE_FROM_SUB_PATH: "false"
+#      TELEGRAM_BOT_TOKEN: "{{ telegram_bot_token }}"
+#      TELEGRAM_CHAT_ID: "{{ telegram_chat_id }}"
 
     volumes:
       - "{{ grafana_data_dir }}:/var/lib/grafana"
