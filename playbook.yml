@@ -1,1 +1,2 @@
-- import_playbook: ansible/playbook.yml
+- name: Import main playbook
+  import_playbook: ansible/playbook.yml

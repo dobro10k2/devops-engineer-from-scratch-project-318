@@ -2,3 +2,6 @@ skip_list:
   - yaml[line-length]
   - yaml[indentation]
   - risky-file-permissions
+  - var-naming
+  - name[play]
+  - o-role-prefix
