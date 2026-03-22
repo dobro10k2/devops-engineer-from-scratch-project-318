@@ -1,0 +1,44 @@
+{
+  "title": "Logs Overview",
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Application Logs",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 25,
+        "h": 14
+      },
+      "targets": [
+        {
+          "expr": "{job=\"app\"}"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Nginx Logs",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 25,
+        "h": 14
+      },
+      "targets": [
+        {
+          "expr": "{job=\"nginx\"}"
+        }
+      ]
+    }
+  ]
+}
+

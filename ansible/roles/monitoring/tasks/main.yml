@@ -80,11 +80,18 @@
     - "{{ grafana_provisioning_dir }}/alerting"
     - "{{ grafana_provisioning_dir }}/datasources"
     - "{{ grafana_provisioning_dir }}/dashboards"
+    - "{{ grafana_provisioning_dir }}/plugins"
 
 - name: Copy Grafana datasource config
   copy:
     src: grafana/provisioning/datasources/datasource.yml
     dest: "{{ grafana_provisioning_dir }}/datasources/datasource.yml"
+  notify: restart grafana
+
+- name: Copy Grafana datasource config
+  copy:
+    src: grafana/provisioning/datasources/loki.yml
+    dest: "{{ grafana_provisioning_dir }}/datasources/loki.yml"
   notify: restart grafana
 
 - name: Copy Grafana dashboards provisioning
@@ -132,13 +139,19 @@
       GF_SERVER_ROOT_URL: https://grafana.dobro10k2.ru
       GF_SERVER_DOMAIN: grafana.dobro10k2.ru
       GF_SERVER_SERVE_FROM_SUB_PATH: "false"
-#      TELEGRAM_BOT_TOKEN: "{{ telegram_bot_token }}"
-#      TELEGRAM_CHAT_ID: "{{ telegram_chat_id }}"
 
     volumes:
       - "{{ grafana_data_dir }}:/var/lib/grafana"
       - "{{ grafana_provisioning_dir }}:/etc/grafana/provisioning"
 
+- name: Wait for Grafana to be ready
+  uri:
+    url: http://localhost:3000/login
+    status_code: 200
+  register: grafana_health
+  retries: 10
+  delay: 3
+  until: grafana_health.status == 200
 
 #
 # Install nginx and certbot
@@ -242,3 +255,10 @@
       - name: "{{ monitoring_docker_network }}"
     ports:
       - "127.0.0.1:{{ nginx_exporter_port }}:9113"
+
+- include_tasks: loki.yml
+  when: inventory_hostname in groups['monitoring']
+
+- name: Reload nginx
+  service:
+    name: nginx

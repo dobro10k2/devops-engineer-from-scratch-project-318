@@ -1,0 +1,10 @@
+firewall_allowed_local_ports:
+  - 9090
+  - 9100
+  - 3000
+  - 3100
+
+firewall_allowed_public_ports:
+  - 22
+  - 80
+  - 443

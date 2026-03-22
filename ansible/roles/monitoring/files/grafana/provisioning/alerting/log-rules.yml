@@ -1,0 +1,166 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: logs-alerts
+    folder: Logs
+    interval: 1m
+    rules:
+
+      # 🔴 NGINX 5xx
+      - uid: nginx-5xx
+        title: High 5xx rate (nginx)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: >
+                sum(count_over_time(
+                  {job="nginx"}
+                  | json
+                  | __error__=""
+                  | status >= 500
+                  [5m]
+                ))
+              interval: ""
+              maxDataPoints: 43200
+
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [5]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: High number of 5xx errors in Nginx logs
+          description: More than 5 errors (5xx) in last 5 minutes
+        labels:
+          severity: warning
+          service: nginx
+
+      # 🟡 NGINX 4xx
+      - uid: nginx-4xx
+        title: High 4xx rate (nginx)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: >
+                sum(count_over_time(
+                  {job="nginx"}
+                  | json
+                  | __error__=""
+                  | status >= 400
+                  | status < 500
+                  [5m]
+                ))
+              interval: ""
+              maxDataPoints: 43200
+
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [20]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: High number of 4xx errors in Nginx logs
+        labels:
+          severity: info
+          service: nginx
+
+      # 🔴 APP ERROR
+      - uid: app-errors
+        title: Application errors (ERROR logs)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: >
+                sum(count_over_time(
+                  {job="app"} |= "ERROR" [5m]
+                ))
+              interval: ""
+              maxDataPoints: 43200
+
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [3]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  type: query
+
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: Application errors detected in logs
+          description: More than 3 ERROR logs in last 5 minutes
+        labels:
+          severity: warning
+          service: app

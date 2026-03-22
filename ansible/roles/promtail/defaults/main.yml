@@ -1,0 +1,4 @@
+promtail_version: "2.9.4"
+promtail_config_dir: /etc/promtail
+
+loki_push_url: "http://{{ monitoring_server_ip }}:3100/loki/api/v1/push"

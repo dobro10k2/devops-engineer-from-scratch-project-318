@@ -395,6 +395,198 @@ increase(http_server_requests_seconds_count{status=~"5.."}[1d])
 
 ---
 
+## Logs Monitoring (Loki + Promtail)
+
+The project includes centralized log collection and analysis using **Loki** and **Promtail**.
+
+### Architecture
+
+```
+Application / Nginx logs
+        ↓
+Promtail
+        ↓
+Loki
+        ↓
+Grafana (Explore + Dashboards + Alerts)
+```
+
+---
+
+## Log Sources
+
+### Nginx logs
+
+```
+/var/log/nginx/access.log
+/var/log/nginx/error.log
+```
+
+### Application logs
+
+Collected from Docker containers via Promtail.
+
+---
+
+## Promtail
+
+Promtail is installed via Ansible and runs as a systemd service.
+
+### Config location
+
+```
+/etc/promtail/config.yml
+```
+
+### Positions file
+
+```
+/var/lib/promtail/positions.yaml
+```
+
+---
+
+## Loki
+
+Loki receives logs from Promtail.
+
+### Endpoint
+
+```
+http://<loki_host>:3100
+```
+
+### Health check
+
+```bash
+curl http://localhost:3100/ready
+```
+
+---
+
+## Grafana Logs (Explore)
+
+Logs can be queried in:
+
+```
+Grafana → Explore → Loki
+```
+
+### Example queries
+
+#### All nginx logs
+
+```
+{job="nginx"}
+```
+
+#### Only errors (5xx)
+
+```
+{job="nginx"} | json | __error__="" | status >= 500
+```
+
+#### Application errors
+
+```
+{job="app"} |= "ERROR"
+```
+
+---
+
+## Logs Dashboard
+
+Dashboard:
+
+```
+Logs Overview
+```
+
+Panels:
+
+| Panel            | Description       |
+| ---------------- | ----------------- |
+| Application Logs | app logs stream   |
+| Nginx Logs       | nginx logs stream |
+
+Uses Loki as datasource.
+
+---
+
+## Log-based Alerts
+
+Alerts are configured via Grafana provisioning.
+
+### Config file
+
+```
+ansible/roles/monitoring/files/grafana/provisioning/alerting/logs-rules.yml
+```
+
+---
+
+## Implemented Log Alerts
+
+| Alert              | Description                       |
+| ------------------ | --------------------------------- |
+| High 5xx rate      | >5 nginx 5xx errors in 5 minutes  |
+| High 4xx rate      | >20 nginx 4xx errors in 5 minutes |
+| Application errors | >3 ERROR logs in 5 minutes        |
+
+---
+
+## Example Alert Query
+
+```
+sum(count_over_time(
+  {job="nginx"}
+  | json
+  | __error__=""
+  | status >= 500
+[5m]))
+```
+
+---
+
+## How to Trigger Log Alerts
+
+### Trigger 5xx errors
+
+```bash
+curl https://board.dobro10k2.ru/nonexistent
+```
+
+---
+
+### Trigger application errors
+
+```bash
+docker stop <app_container>
+```
+
+or generate failing requests.
+
+---
+
+## Verification
+
+1. Open Grafana → Explore → Loki
+2. Run query:
+
+```
+{job="nginx"}
+```
+
+3. Verify logs are present
+4. Trigger errors
+5. Check:
+
+* logs appear
+* alerts move to Pending → Firing
+* Telegram notification received
+
+---
+
 # Screenshots
 
 ### System Metrics
@@ -433,6 +625,24 @@ increase(http_server_requests_seconds_count{status=~"5.."}[1d])
 ### Prometheus 5xx Errors
 
 ![5xx](assets/prometheus-5xx-errors.png)
+
+### Logs in Explore
+
+```
+assets/logs-explore.png
+```
+
+### Logs Dashboard
+
+```
+assets/logs-dashboard.png
+```
+
+### Log Alert Rules
+
+```
+assets/logs-alerts.png
+```
 
 ---
 

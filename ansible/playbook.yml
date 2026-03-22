@@ -10,6 +10,7 @@
     - nginx
     - certbot
     - node_exporter
+    - promtail
 
 - name: Deploy application
   hosts: app

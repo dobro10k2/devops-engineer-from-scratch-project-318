@@ -1,0 +1,45 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Nginx Logs",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{job=\"nginx\"}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 }
+    },
+    {
+      "type": "logs",
+      "title": "App Logs",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{job=\"app\"}",
+          "refId": "B"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "5xx Errors (Logs)",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "count_over_time({job=\"nginx\"} |= \" 5\" [5m])",
+          "refId": "C"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 }
+    }
+  ],
+  "schemaVersion": 36,
+  "title": "Logs Overview",
+  "version": 1
+}

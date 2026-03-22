@@ -4,11 +4,27 @@
     name: ufw
     state: present
 
-- name: Allow required ports
-  ufw:
+- name: Reset UFW
+  community.general.ufw:
+    state: reset
+
+- name: Set default deny incoming
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+
+- name: Allow Public Ports
+  community.general.ufw:
     rule: allow
     port: "{{ item }}"
-  loop: "{{ firewall_allowed_ports }}"
+  loop: "{{ firewall_allowed_public_ports }}"
+
+- name: Allow internal monitoring ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    src: "{{ private_network_cidr }}"
+  loop: "{{ firewall_allowed_local_ports }}"
 
 - name: Enable firewall
   community.general.ufw:
