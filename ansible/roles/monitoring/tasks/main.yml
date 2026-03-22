@@ -25,7 +25,7 @@
     path: "{{ monitoring_prometheus_data_dir }}"
     owner: 65534
     group: 65534
-    mode: "0644"
+    mode: "0755"
     recurse: true
 
 - name: Deploy prometheus config
@@ -110,7 +110,7 @@
     dest: "{{ monitoring_grafana_data_dir }}/dashboards/"
     owner: "472"
     group: "472"
-    mode: "0644"
+    mode: "0755"
   notify: Restart grafana
 
 - name: Deploy Grafana contact points with secrets

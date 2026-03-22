@@ -3,6 +3,8 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
+    owner: 10001
+    group: 10001
     mode: "0755"
   loop:
     - "{{ monitoring_loki_data_dir }}"
@@ -14,7 +16,7 @@
     state: directory
     owner: 10001
     group: 10001
-    mode: "0644"
+    mode: "0755"
   loop:
     - "{{ monitoring_loki_data_dir }}/data"
     - "{{ monitoring_loki_data_dir }}/data/index"
@@ -22,15 +24,6 @@
     - "{{ monitoring_loki_data_dir }}/data/compactor"
     - "{{ monitoring_loki_data_dir }}/data/chunks"
     - "{{ monitoring_loki_data_dir }}/data/wal"
-
-- name: Fix permissions for Loki
-  ansible.builtin.file:
-    path: "{{ monitoring_loki_data_dir }}"
-    state: directory
-    recurse: true
-    owner: 10001
-    group: 10001
-    mode: "0644"
 
 - name: Template Loki config
   ansible.builtin.template:

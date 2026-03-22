@@ -22,7 +22,7 @@
   ansible.builtin.file:
     path: "{{ promtail_config_dir }}"
     state: directory
-    mode: "0644"
+    mode: "0755"
 
 - name: Template config
   ansible.builtin.template:
@@ -37,7 +37,7 @@
     state: directory
     owner: root
     group: root
-    mode: "0755"
+    mode: "0750"
 
 - name: Template systemd unit
   ansible.builtin.template:
