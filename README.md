@@ -628,21 +628,15 @@ or generate failing requests.
 
 ### Logs in Explore
 
-```
-assets/logs-explore.png
-```
+![Log-explore](assets/logs-explore.png)
 
 ### Logs Dashboard
 
-```
-assets/logs-dashboard.png
-```
+![Log-dash](assets/logs-dashboard.png)
 
 ### Log Alert Rules
 
-```
-assets/logs-alerts.png
-```
+![Log-alert](assets/logs-alerts.png)
 
 ---
 
