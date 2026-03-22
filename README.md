@@ -167,6 +167,18 @@ Smoke tests check:
 
 # 📊 Monitoring
 
+## 📊 Key Metrics
+
+| Metric | Description | Source |
+|-------|------------|--------|
+| http_server_requests_seconds_count | request count | application |
+| process_cpu_usage | CPU usage | application |
+| node_cpu_seconds_total | CPU host | node_exporter |
+| node_memory_MemAvailable_bytes | memory | node_exporter |
+| nginx_connections_active | active connections | nginx exporter |
+
+---
+
 ## Metrics sources
 
 * application → `/actuator/prometheus`
