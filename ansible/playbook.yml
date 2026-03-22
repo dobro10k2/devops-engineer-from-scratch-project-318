@@ -1,5 +1,5 @@
 ---
-- name: Configure server
+- name: Configure application server
   hosts: app
   roles:
     - docker_setup
@@ -18,9 +18,9 @@
     - role: docker_deploy
       tags: deploy
 
-- hosts: monitoring
+- name: Setup monitoring server
+  hosts: monitoring
   become: true
-
   roles:
     - firewall
     - docker_setup

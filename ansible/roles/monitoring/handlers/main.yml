@@ -1,11 +1,17 @@
-- name: restart prometheus
+---
+- name: Restart prometheus
   community.docker.docker_container:
     name: prometheus
     state: started
     restart: true
 
-- name: restart grafana
+- name: Restart grafana
   community.docker.docker_container:
     name: grafana
     state: started
     restart: true
+
+- name: Reload nginx
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded

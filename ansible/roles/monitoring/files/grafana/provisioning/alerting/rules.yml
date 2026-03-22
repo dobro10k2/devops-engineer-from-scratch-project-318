@@ -1,3 +1,4 @@
+---
 apiVersion: 1
 
 groups:
@@ -7,7 +8,6 @@ groups:
     interval: 1m
 
     rules:
-
       # 🔴 APPLICATION DOWN
       - uid: application-down
         title: Application Down
@@ -23,7 +23,7 @@ groups:
               refId: A
 
           - refId: B
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: reduce
               expression: A
@@ -31,7 +31,7 @@ groups:
               refId: B
 
           - refId: C
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: threshold
               expression: B
@@ -50,7 +50,7 @@ groups:
         execErrState: Alerting
         for: 2m
         annotations:
-          summary: "Application is DOWN"
+          summary: Application is DOWN
         labels:
           severity: critical
           service: application
@@ -70,7 +70,7 @@ groups:
               refId: A
 
           - refId: B
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: reduce
               expression: A
@@ -78,7 +78,7 @@ groups:
               refId: B
 
           - refId: C
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: threshold
               expression: B
@@ -96,7 +96,7 @@ groups:
         for: 5m
         noDataState: OK
         annotations:
-          summary: "CPU > 80%"
+          summary: CPU > 80%
         labels:
           severity: warning
           service: system
@@ -116,7 +116,7 @@ groups:
               refId: A
 
           - refId: B
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: reduce
               expression: A
@@ -124,7 +124,7 @@ groups:
               refId: B
 
           - refId: C
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: threshold
               expression: B
@@ -142,7 +142,7 @@ groups:
         for: 5m
         noDataState: OK
         annotations:
-          summary: "RAM > 80%"
+          summary: RAM > 80%
         labels:
           severity: warning
           service: system
@@ -162,7 +162,7 @@ groups:
               refId: A
 
           - refId: B
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: reduce
               expression: A
@@ -170,7 +170,7 @@ groups:
               refId: B
 
           - refId: C
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: threshold
               expression: B
@@ -188,7 +188,7 @@ groups:
         for: 5m
         noDataState: OK
         annotations:
-          summary: "Disk < 20%"
+          summary: Disk < 20%
         labels:
           severity: warning
           service: system
@@ -208,7 +208,7 @@ groups:
               refId: A
 
           - refId: B
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: reduce
               expression: A
@@ -216,7 +216,7 @@ groups:
               refId: B
 
           - refId: C
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: threshold
               expression: B
@@ -234,7 +234,7 @@ groups:
         for: 5m
         noDataState: OK
         annotations:
-          summary: "Нет метрик от приложения"
+          summary: Нет метрик от приложения
         labels:
           severity: critical
           service: application
@@ -254,7 +254,7 @@ groups:
               refId: A
 
           - refId: B
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: reduce
               expression: A
@@ -262,7 +262,7 @@ groups:
               refId: B
 
           - refId: C
-            datasourceUid: "__expr__"
+            datasourceUid: __expr__
             model:
               type: threshold
               expression: B
@@ -280,7 +280,7 @@ groups:
         for: 2m
         noDataState: OK
         annotations:
-          summary: "Есть ошибки 5xx"
+          summary: Есть ошибки 5xx
         labels:
           severity: warning
           service: application

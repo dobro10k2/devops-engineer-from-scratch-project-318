@@ -3,40 +3,334 @@
 
 # Bulletin Board Observability Infrastructure
 
-Infrastructure for the **Bulletin Board application** built as part of the **Hexlet DevOps Engineer from Scratch program**, providing containerized deployment and full observability using Ansible, Docker, Prometheus, and Grafana.
+---
+
+## 📌 Project Overview
+
+Infrastructure for the **Bulletin Board application** built as part of the **Hexlet DevOps Engineer from Scratch program**.
+
+The project provides:
+
+* automated deployment via **Ansible**
+* containerized runtime (**Docker**)
+* observability stack (**Prometheus + Grafana + Loki**)
+* alerting via **Telegram**
+* centralized logging (**Loki + Promtail**)
 
 ---
 
-# Project Overview
+## 🌐 URLs
 
-This repository contains the **infrastructure code** used to deploy the application and implement observability.
-
-The infrastructure is provisioned using **Ansible** and runs the application inside **Docker** containers.
-
-The project implements:
-
-* automated deployment using Ansible
-* containerized application runtime
-* object storage using **MinIO**
-* PostgreSQL database container
-* reverse proxy using **NGINX**
-* HTTPS certificates issued by **Let’s Encrypt**
-* monitoring using **Prometheus**
-* visualization and alerting using **Grafana**
-* host monitoring using **Node Exporter**
-* application metrics using **Spring Boot Actuator** and **Micrometer**
+| Service     | URL                             |
+| ----------- | ------------------------------- |
+| Application | https://board.dobro10k2.ru      |
+| Grafana     | https://grafana.dobro10k2.ru    |
+| Prometheus  | https://prometheus.dobro10k2.ru |
 
 ---
 
-# Application URL
+## 🖥 Infrastructure
+
+### Servers
+
+| Role       | Description                     |
+| ---------- | ------------------------------- |
+| App server | application + nginx + exporters |
+| Monitoring | prometheus + grafana + loki     |
+
+---
+
+## 🔌 Ports
+
+### Public
+
+* 22 — SSH
+* 80 — HTTP
+* 443 — HTTPS
+
+### Internal
+
+* 9090 — application metrics
+* 9100 — node_exporter
+* 3000 — Grafana
+* 3100 — Loki
+* 9113 — nginx exporter
+
+---
+
+## 🔐 Secrets
+
+All secrets are stored in:
 
 ```
-https://board.dobro10k2.ru
+ansible/group_vars/all/vault.yml
+```
+
+Includes:
+
+* database credentials
+* MinIO keys
+* Grafana admin password
+* Telegram bot token
+
+---
+
+# 🚀 Deployment from scratch
+
+## 1. Clone repository
+
+```
+git clone <repo>
+cd devops-engineer-from-scratch-project-318
 ```
 
 ---
 
-# Repository Structure
+## 2. Create vault password file
+
+```
+echo "your_password" > .vault_pass
+chmod 600 .vault_pass
+```
+
+---
+
+## 3. Install dependencies
+
+```
+pip install ansible ansible-lint
+ansible-galaxy collection install -r ansible/requirements.yml
+```
+
+---
+
+## 4. Configure inventory
+
+```
+ansible/inventory.ini
+```
+
+---
+
+## 5. Initial deployment
+
+```
+make setup
+```
+
+---
+
+## 6. Deploy new version
+
+```
+make deploy
+```
+
+---
+
+## 7. Rollback
+
+```
+make rollback TAG=<docker_tag>
+```
+
+---
+
+# 🧪 Testing & Validation
+
+## Lint
+
+```
+make lint
+```
+
+## Syntax check
+
+```
+make test
+```
+
+## Smoke tests
+
+```
+make smoke
+```
+
+Smoke tests check:
+
+* application availability
+* Prometheus health
+* Grafana availability
+* metrics endpoint
+
+---
+
+# 📊 Monitoring
+
+## Metrics sources
+
+* application → `/actuator/prometheus`
+* node_exporter
+* nginx exporter
+
+---
+
+## Prometheus
+
+```
+https://prometheus.dobro10k2.ru
+```
+
+Check:
+
+```
+up == 1
+```
+
+---
+
+## Grafana
+
+```
+https://grafana.dobro10k2.ru
+```
+
+Login:
+
+```
+admin
+```
+
+Password is stored in Vault.
+
+---
+
+## Dashboards
+
+| Dashboard           | Description           |
+| ------------------- | --------------------- |
+| Status Page         | overall system health |
+| System Metrics      | CPU, RAM, disk        |
+| Application Metrics | RPS, latency          |
+| HTTP Metrics        | status codes          |
+| Nginx Metrics       | connections           |
+| Logs Overview       | logs from Loki        |
+
+---
+
+# 🚨 Alerting
+
+Configured via Grafana provisioning.
+
+## Alerts
+
+* Application Down
+* High CPU (>80%)
+* High Memory (>80%)
+* Disk Almost Full
+* No Metrics
+* High 5xx rate
+* Log-based alerts (Loki)
+
+---
+
+## Notifications
+
+* Telegram Bot API
+
+---
+
+## How to trigger alerts
+
+### Application down
+
+```
+docker stop <app_container>
+```
+
+### High CPU
+
+```
+yes > /dev/null
+```
+
+### 5xx errors
+
+```
+curl https://board.dobro10k2.ru/invalid-endpoint
+```
+
+---
+
+# 📜 Logs (Loki + Promtail)
+
+## Architecture
+
+```
+Application / Nginx
+        ↓
+Promtail
+        ↓
+Loki
+        ↓
+Grafana
+```
+
+---
+
+## Log sources
+
+* `/var/log/nginx/access.log`
+* `/var/log/nginx/error.log`
+* application logs (Docker)
+
+---
+
+## Loki endpoint
+
+```
+http://localhost:3100
+```
+
+---
+
+## Example queries
+
+```
+{job="nginx"}
+```
+
+```
+{job="nginx"} | json | status >= 500
+```
+
+```
+{job="app"} |= "ERROR"
+```
+
+---
+
+# 🔍 Manual Verification
+
+1. Open application
+
+2. Open Grafana
+
+3. Verify dashboards:
+
+   * metrics present
+   * logs present
+
+4. Trigger alert
+
+5. Verify:
+
+   * alert in Grafana
+   * Telegram notification
+
+---
+
+# 📁 Repository Structure
 
 ```
 .
@@ -63,531 +357,7 @@ https://board.dobro10k2.ru
 
 ---
 
-# Deployment Commands
-
-### Initial deployment
-
-```
-make setup
-```
-
-### Deploy new application version
-
-```
-make deploy
-```
-
-### Rollback
-
-```
-make rollback TAG=<docker_tag>
-```
-
----
-
-# Infrastructure Components
-
-```
-VM
-│
-├── Nginx
-├── Node Exporter
-│
-├── Docker
-│   ├── Application
-│   ├── PostgreSQL
-│   ├── MinIO
-│   ├── Prometheus
-│   └── Grafana
-```
-
----
-
-# Metrics Endpoints
-
-### Application metrics
-
-```
-http://localhost:9090/actuator/prometheus
-```
-
-### Host metrics
-
-```
-http://localhost:9100/metrics
-```
-
----
-
-# Prometheus
-
-```
-https://prometheus.dobro10k2.ru
-```
-
-Check targets:
-
-```
-up == 1
-```
-
----
-
-# Grafana
-
-```
-https://grafana.dobro10k2.ru
-```
-
-Login:
-
-```
-admin
-```
-
-Password stored in Vault.
-
----
-
-# Dashboards
-
-Dashboards are provisioned automatically:
-
-```
-ansible/roles/monitoring/files/grafana/dashboards
-```
-
-## Available dashboards
-
-| Dashboard           | Description                         |
-| ------------------- | ----------------------------------- |
-| Status Page         | overall system health               |
-| System Metrics      | CPU, memory, disk, network          |
-| Application Metrics | RPS, latency, uptime                |
-| HTTP Metrics        | request rates, status codes, errors |
-
----
-
-# Status Page
-
-Provides a quick overview:
-
-* Application status (UP / DOWN)
-* CPU usage
-* Memory usage
-* Disk usage
-* 5xx errors
-
-This dashboard directly reflects alert rules.
-
----
-
-# Alerting
-
-Alerting is configured via Grafana provisioning.
-
-## Config location
-
-```
-ansible/roles/monitoring/files/grafana/provisioning/alerting
-```
-
-## Files
-
-* rules.yml — alert rules
-* policies.yml — routing
-* contactpoints.yml — notification channels
-
----
-
-# Notification Channel
-
-Alerts are sent to **Telegram Bot API**.
-
-Secrets are stored in Vault:
-
-```
-telegram_bot_token
-telegram_chat_id
-```
-
----
-
-# Implemented Alerts
-
-| Alert            | Description            |
-| ---------------- | ---------------------- |
-| Application Down | app is not responding  |
-| High CPU         | CPU > 80%              |
-| High Memory      | RAM > 80%              |
-| Disk Almost Full | < 20% free space       |
-| No Metrics       | metrics missing        |
-| High 5xx         | server errors detected |
-
-All alerts include:
-
-* severity label
-* service label
-
----
-
-# How to View Alerts
-
-Grafana → Alerting → Alert rules
-
----
-
-# How to Trigger Alerts
-
-### Application Down
-
-```
-docker stop <app_container>
-```
-
----
-
-### High CPU
-
-```
-yes > /dev/null
-```
-
----
-
-### 5xx Errors
-
-```
-curl https://board.dobro10k2.ru/invalid-endpoint
-```
-
----
-
-### No Metrics
-
-Stop application or block metrics endpoint.
-
----
-
-# Alerting Flow
-
-```
-Application / Node Exporter
-        ↓
-Prometheus
-        ↓
-Grafana Alerting
-        ↓
-Telegram
-```
-
----
-
-# Verification
-
-1. Open Grafana
-2. Trigger alert
-3. Verify:
-
-   * alert appears in Grafana
-   * Telegram notification received
-   * dashboard reflects issue
-
----
-
-## Nginx Monitoring
-
-### stub_status
-
-Nginx exposes metrics via the `stub_status` module:
-
-```
-http://10.129.0.16/nginx_status
-```
-
-Access is restricted:
-
-* allowed: 10.129.0.25 (monitoring server)
-* denied for others
-
----
-
-### Verification
-
-#### Check stub_status
-
-```bash
-curl http://10.129.0.16/nginx_status
-```
-
-Expected output:
-
-```
-Active connections: 1
-Reading: 0 Writing: 1 Waiting: 0
-```
-
----
-
-#### Check nginx exporter
-
-```bash
-curl http://localhost:9113/metrics | grep nginx_
-```
-
----
-
-#### Check Prometheus
-
-```
-https://prometheus.dobro10k2.ru
-```
-
-Query:
-
-```
-nginx_connections_active
-```
-
----
-
-## Grafana
-
-```
-https://grafana.dobro10k2.ru
-```
-
-Dashboards:
-
-* Nginx Metrics
-* HTTP Metrics
-
----
-
-## 5xx Monitoring
-
-5xx errors are collected from application metrics (Spring Boot + Micrometer).
-
-Nginx exporter does not provide HTTP status codes.
-
----
-
-### Trigger 5xx errors
-
-```bash
-docker stop postgres
-docker restart <app_container>
-```
-
-Then generate requests:
-
-```bash
-for i in {1..10}; do curl -s -o /dev/null https://board.dobro10k2.ru/api/bulletins; done
-```
-
----
-
-### Grafana query (avoid "No data")
-
-```
-increase(http_server_requests_seconds_count{status=~"5.."}[1d])
-```
-
----
-
-## Logs Monitoring (Loki + Promtail)
-
-The project includes centralized log collection and analysis using **Loki** and **Promtail**.
-
-### Architecture
-
-```
-Application / Nginx logs
-        ↓
-Promtail
-        ↓
-Loki
-        ↓
-Grafana (Explore + Dashboards + Alerts)
-```
-
----
-
-## Log Sources
-
-### Nginx logs
-
-```
-/var/log/nginx/access.log
-/var/log/nginx/error.log
-```
-
-### Application logs
-
-Collected from Docker containers via Promtail.
-
----
-
-## Promtail
-
-Promtail is installed via Ansible and runs as a systemd service.
-
-### Config location
-
-```
-/etc/promtail/config.yml
-```
-
-### Positions file
-
-```
-/var/lib/promtail/positions.yaml
-```
-
----
-
-## Loki
-
-Loki receives logs from Promtail.
-
-### Endpoint
-
-```
-http://<loki_host>:3100
-```
-
-### Health check
-
-```bash
-curl http://localhost:3100/ready
-```
-
----
-
-## Grafana Logs (Explore)
-
-Logs can be queried in:
-
-```
-Grafana → Explore → Loki
-```
-
-### Example queries
-
-#### All nginx logs
-
-```
-{job="nginx"}
-```
-
-#### Only errors (5xx)
-
-```
-{job="nginx"} | json | __error__="" | status >= 500
-```
-
-#### Application errors
-
-```
-{job="app"} |= "ERROR"
-```
-
----
-
-## Logs Dashboard
-
-Dashboard:
-
-```
-Logs Overview
-```
-
-Panels:
-
-| Panel            | Description       |
-| ---------------- | ----------------- |
-| Application Logs | app logs stream   |
-| Nginx Logs       | nginx logs stream |
-
-Uses Loki as datasource.
-
----
-
-## Log-based Alerts
-
-Alerts are configured via Grafana provisioning.
-
-### Config file
-
-```
-ansible/roles/monitoring/files/grafana/provisioning/alerting/logs-rules.yml
-```
-
----
-
-## Implemented Log Alerts
-
-| Alert              | Description                       |
-| ------------------ | --------------------------------- |
-| High 5xx rate      | >5 nginx 5xx errors in 5 minutes  |
-| High 4xx rate      | >20 nginx 4xx errors in 5 minutes |
-| Application errors | >3 ERROR logs in 5 minutes        |
-
----
-
-## Example Alert Query
-
-```
-sum(count_over_time(
-  {job="nginx"}
-  | json
-  | __error__=""
-  | status >= 500
-[5m]))
-```
-
----
-
-## How to Trigger Log Alerts
-
-### Trigger 5xx errors
-
-```bash
-curl https://board.dobro10k2.ru/nonexistent
-```
-
----
-
-### Trigger application errors
-
-```bash
-docker stop <app_container>
-```
-
-or generate failing requests.
-
----
-
-## Verification
-
-1. Open Grafana → Explore → Loki
-2. Run query:
-
-```
-{job="nginx"}
-```
-
-3. Verify logs are present
-4. Trigger errors
-5. Check:
-
-* logs appear
-* alerts move to Pending → Firing
-* Telegram notification received
-
----
-
-# Screenshots
+# 🖼 Screenshots
 
 ### System Metrics
 
@@ -640,26 +410,26 @@ or generate failing requests.
 
 ---
 
-# Conclusion
+# ✅ Conclusion
 
 The project implements a full observability stack:
 
 * metrics collection (Prometheus)
-* visualization (Grafana dashboards)
-* alerting (Grafana Alerting + Telegram)
+* visualization (Grafana)
+* centralized logging (Loki)
+* alerting (Telegram)
 
-This setup allows detecting and reacting to:
+Infrastructure is:
 
-* application failures
-* resource exhaustion
-* error spikes
-* missing telemetry
+* reproducible
+* idempotent
+* validated via lint and smoke tests
 
 ---
 
-# Notes
+# 📌 Notes
 
-All sensitive data is stored in Ansible Vault.
-
-Deployment is fully reproducible using Makefile commands.
+* All secrets are stored in Ansible Vault
+* Infrastructure is fully reproducible using Makefile
+* Ansible playbooks pass `ansible-lint` (production profile)
 

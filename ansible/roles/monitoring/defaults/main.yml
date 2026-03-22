@@ -1,3 +1,4 @@
+---
 prometheus_image: prom/prometheus:latest
 grafana_image: grafana/grafana:latest
 
@@ -15,11 +16,11 @@ monitoring_docker_network: monitoring
 nginx_exporter_image: nginx/nginx-prometheus-exporter:1.1.0
 nginx_exporter_port: 9113
 
-loki_version: "2.9.4"
-promtail_version: "2.9.4"
+loki_version: 2.9.4
+promtail_version: 2.9.4
 
 loki_port: 3100
 
 loki_data_dir: /opt/loki
 
-loki_push_url: "http://{{ monitoring_server_ip }}:3100/loki/api/v1/push"
+loki_push_url: http://{{ monitoring_server_ip }}:3100/loki/api/v1/push

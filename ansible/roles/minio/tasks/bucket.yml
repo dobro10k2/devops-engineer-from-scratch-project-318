@@ -1,3 +1,4 @@
+---
 - name: Create bucket
   community.docker.docker_container_exec:
     container: "{{ minio_container_name }}"

@@ -1,14 +1,15 @@
+---
 - name: Create Loki directories
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   loop:
     - "{{ loki_data_dir }}"
     - "{{ loki_data_dir }}/data"
 
 - name: Create Loki subdirectories
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     owner: 10001
@@ -22,22 +23,22 @@
     - "{{ loki_data_dir }}/data/wal"
 
 - name: Fix permissions for Loki
-  file:
+  ansible.builtin.file:
     path: "{{ loki_data_dir }}"
     state: directory
-    recurse: yes
+    recurse: true
     owner: 10001
     group: 10001
 
 - name: Template Loki config
-  template:
+  ansible.builtin.template:
     src: loki-config.yml.j2
     dest: "{{ loki_data_dir }}/loki-config.yml"
 
 - name: Run Loki container
   community.docker.docker_container:
     name: loki
-    image: "grafana/loki:{{ loki_version }}"
+    image: grafana/loki:{{ loki_version }}
     state: started
     restart_policy: always
     command: -config.file=/etc/loki/local-config.yaml
