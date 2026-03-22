@@ -1,7 +1,7 @@
 ---
 app_name: bulletin-board
 
-docker_image: "ghcr.io/dobro10k2/project-devops-deploy:{{ docker_tag | default('latest') }}"
+docker_image: "ghcr.io/dobro10k2/project-devops-deploy"
 
 docker_network_name: bulletin-network
 
