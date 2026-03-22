@@ -5,8 +5,8 @@
     state: directory
     mode: "0755"
   loop:
-    - "{{ loki_data_dir }}"
-    - "{{ loki_data_dir }}/data"
+    - "{{ monitoring_loki_data_dir }}"
+    - "{{ monitoring_loki_data_dir }}/data"
 
 - name: Create Loki subdirectories
   ansible.builtin.file:
@@ -14,38 +14,41 @@
     state: directory
     owner: 10001
     group: 10001
+    mode: "0644"
   loop:
-    - "{{ loki_data_dir }}/data"
-    - "{{ loki_data_dir }}/data/index"
-    - "{{ loki_data_dir }}/data/cache"
-    - "{{ loki_data_dir }}/data/compactor"
-    - "{{ loki_data_dir }}/data/chunks"
-    - "{{ loki_data_dir }}/data/wal"
+    - "{{ monitoring_loki_data_dir }}/data"
+    - "{{ monitoring_loki_data_dir }}/data/index"
+    - "{{ monitoring_loki_data_dir }}/data/cache"
+    - "{{ monitoring_loki_data_dir }}/data/compactor"
+    - "{{ monitoring_loki_data_dir }}/data/chunks"
+    - "{{ monitoring_loki_data_dir }}/data/wal"
 
 - name: Fix permissions for Loki
   ansible.builtin.file:
-    path: "{{ loki_data_dir }}"
+    path: "{{ monitoring_loki_data_dir }}"
     state: directory
     recurse: true
     owner: 10001
     group: 10001
+    mode: "0644"
 
 - name: Template Loki config
   ansible.builtin.template:
     src: loki-config.yml.j2
-    dest: "{{ loki_data_dir }}/loki-config.yml"
+    dest: "{{ monitoring_loki_data_dir }}/loki-config.yml"
+    mode: "0644"
 
 - name: Run Loki container
   community.docker.docker_container:
     name: loki
-    image: grafana/loki:{{ loki_version }}
+    image: grafana/loki:{{ monitoring_loki_version }}
     state: started
     restart_policy: always
     command: -config.file=/etc/loki/local-config.yaml
     ports:
-      - "{{ loki_port }}:3100"
+      - "{{ monitoring_loki_port }}:3100"
     volumes:
-      - "{{ loki_data_dir }}/loki-config.yml:/etc/loki/local-config.yaml"
-      - "{{ loki_data_dir }}/data:/loki"
+      - "{{ monitoring_loki_data_dir }}/loki-config.yml:/etc/loki/local-config.yaml"
+      - "{{ monitoring_loki_data_dir }}/data:/loki"
     networks:
       - name: "{{ monitoring_docker_network }}"

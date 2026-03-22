@@ -9,6 +9,7 @@
   ansible.builtin.get_url:
     url: https://github.com/grafana/loki/releases/download/v{{ promtail_version }}/promtail-linux-amd64.zip
     dest: /tmp/promtail.zip
+    mode: "0644"
 
 - name: Unarchive Promtail
   ansible.builtin.unarchive:
@@ -21,11 +22,13 @@
   ansible.builtin.file:
     path: "{{ promtail_config_dir }}"
     state: directory
+    mode: "0644"
 
 - name: Template config
   ansible.builtin.template:
     src: promtail-config.yml.j2
     dest: "{{ promtail_config_dir }}/config.yml"
+    mode: "0644"
   notify: restart promtail
 
 - name: Create positions directory
@@ -40,6 +43,7 @@
   ansible.builtin.template:
     src: promtail.service.j2
     dest: /etc/systemd/system/promtail.service
+    mode: "0644"
   notify: restart promtail
 
 - name: Start promtail

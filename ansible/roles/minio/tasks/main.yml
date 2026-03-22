@@ -49,7 +49,7 @@
 - name: Check if mc alias exists
   ansible.builtin.command: >
     docker exec {{ minio_container_name }} mc alias list
-  register: mc_alias_list
+  register: minio_mc_alias_list
   changed_when: false
 
 - name: Configure mc alias
@@ -58,14 +58,14 @@
     mc alias set local http://127.0.0.1:9000
     {{ vault_env_vars.STORAGE_S3_ACCESSKEY }}
     {{ vault_env_vars.STORAGE_S3_SECRETKEY }}
-  when: "'local' not in mc_alias_list.stdout"
+  when: "'local' not in minio_mc_alias_list.stdout"
   changed_when: true
 
 - name: Check if bucket exists
   ansible.builtin.command: >
     docker exec {{ minio_container_name }}
     mc ls local/{{ vault_env_vars.STORAGE_S3_BUCKET }}
-  register: bucket_check
+  register: minio_bucket_check
   failed_when: false
   changed_when: false
 
@@ -73,7 +73,7 @@
   ansible.builtin.command: >
     docker exec {{ minio_container_name }}
     mc mb local/{{ vault_env_vars.STORAGE_S3_BUCKET }}
-  when: bucket_check.rc != 0
+  when: minio_bucket_check.rc != 0
   changed_when: false
 
 - name: Set bucket public policy

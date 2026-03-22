@@ -1,26 +1,26 @@
 ---
-prometheus_image: prom/prometheus:latest
-grafana_image: grafana/grafana:latest
+monitoring_prometheus_image: prom/prometheus:latest
+monitoring_grafana_image: grafana/grafana:latest
 
-prometheus_config_dir: /opt/prometheus
-prometheus_data_dir: /opt/prometheus/data
+monitoring_prometheus_config_dir: /opt/prometheus
+monitoring_prometheus_data_dir: /opt/prometheus/data
 
-prometheus_port: 9090
-grafana_port: 3000
+monitoring_prometheus_port: 9090
+monitoring_grafana_port: 3000
 
-grafana_data_dir: /opt/grafana
-grafana_provisioning_dir: /opt/grafana/provisioning
+monitoring_grafana_data_dir: /opt/grafana
+monitoring_grafana_provisioning_dir: /opt/grafana/provisioning
 
 monitoring_docker_network: monitoring
 
-nginx_exporter_image: nginx/nginx-prometheus-exporter:1.1.0
-nginx_exporter_port: 9113
+monitoring_nginx_exporter_image: nginx/nginx-prometheus-exporter:1.1.0
+monitoring_nginx_exporter_port: 9113
 
-loki_version: 2.9.4
-promtail_version: 2.9.4
+monitoring_loki_version: 2.9.4
+monitoring_promtail_version: 2.9.4
 
-loki_port: 3100
+monitoring_loki_port: 3100
 
-loki_data_dir: /opt/loki
+monitoring_loki_data_dir: /opt/loki
 
-loki_push_url: http://{{ monitoring_server_ip }}:3100/loki/api/v1/push
+monitoring_loki_push_url: http://{{ monitoring_server_ip }}:3100/loki/api/v1/push

@@ -17,32 +17,35 @@
     state: directory
     mode: "0755"
   loop:
-    - "{{ prometheus_config_dir }}"
-    - "{{ prometheus_data_dir }}"
+    - "{{ monitoring_prometheus_config_dir }}"
+    - "{{ monitoring_prometheus_data_dir }}"
 
 - name: Set permissions for prometheus data
   ansible.builtin.file:
-    path: "{{ prometheus_data_dir }}"
+    path: "{{ monitoring_prometheus_data_dir }}"
     owner: 65534
     group: 65534
+    mode: "0644"
     recurse: true
 
 - name: Deploy prometheus config
   ansible.builtin.template:
     src: prometheus.yml.j2
-    dest: "{{ prometheus_config_dir }}/prometheus.yml"
+    dest: "{{ monitoring_prometheus_config_dir }}/prometheus.yml"
+    mode: "0644"
   notify: Restart prometheus
 
 - name: Deploy alert rules
   ansible.builtin.template:
     src: alerts.yml.j2
-    dest: "{{ prometheus_config_dir }}/alerts.yml"
+    dest: "{{ monitoring_prometheus_config_dir }}/alerts.yml"
+    mode: "0644"
   notify: Restart prometheus
 
 - name: Run Prometheus container
   community.docker.docker_container:
     name: prometheus
-    image: "{{ prometheus_image }}"
+    image: "{{ monitorung_prometheus_image }}"
     restart_policy: always
 
     ports:
@@ -52,9 +55,9 @@
       - name: monitoring
 
     volumes:
-      - "{{ prometheus_config_dir }}/prometheus.yml:/etc/prometheus/prometheus.yml"
-      - "{{ prometheus_config_dir }}/alerts.yml:/etc/prometheus/alerts.yml"
-      - "{{ prometheus_data_dir }}:/prometheus"
+      - "{{ monitoring_prometheus_config_dir }}/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - "{{ monitoring_prometheus_config_dir }}/alerts.yml:/etc/prometheus/alerts.yml"
+      - "{{ monitoring_prometheus_data_dir }}:/prometheus"
 
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -72,36 +75,39 @@
     group: "472"
     mode: "0755"
   loop:
-    - "{{ grafana_data_dir }}"
-    - "{{ grafana_provisioning_dir }}"
-    - "{{ grafana_data_dir }}/dashboards"
-    - "{{ grafana_provisioning_dir }}/alerting"
-    - "{{ grafana_provisioning_dir }}/datasources"
-    - "{{ grafana_provisioning_dir }}/dashboards"
-    - "{{ grafana_provisioning_dir }}/plugins"
+    - "{{ monitoring_grafana_data_dir }}"
+    - "{{ monitoring_grafana_provisioning_dir }}"
+    - "{{ monitoring_grafana_data_dir }}/dashboards"
+    - "{{ monitoring_grafana_provisioning_dir }}/alerting"
+    - "{{ monitoring_grafana_provisioning_dir }}/datasources"
+    - "{{ monitoring_grafana_provisioning_dir }}/dashboards"
+    - "{{ monitoring_grafana_provisioning_dir }}/plugins"
 
 - name: Copy Grafana datasource config
   ansible.builtin.copy:
     src: grafana/provisioning/datasources/datasource.yml
-    dest: "{{ grafana_provisioning_dir }}/datasources/datasource.yml"
+    dest: "{{ monitoring_grafana_provisioning_dir }}/datasources/datasource.yml"
+    mode: "0644"
   notify: Restart grafana
 
 - name: Copy Grafana datasource config
   ansible.builtin.copy:
     src: grafana/provisioning/datasources/loki.yml
-    dest: "{{ grafana_provisioning_dir }}/datasources/loki.yml"
+    dest: "{{ monitoring_grafana_provisioning_dir }}/datasources/loki.yml"
+    mode: "0644"
   notify: Restart grafana
 
 - name: Copy Grafana dashboards provisioning
   ansible.builtin.copy:
     src: grafana/provisioning/dashboards/dashboards.yml
-    dest: "{{ grafana_provisioning_dir }}/dashboards/dashboards.yml"
+    dest: "{{ monitoring_grafana_provisioning_dir }}/dashboards/dashboards.yml"
+    mode: "0644"
   notify: Restart grafana
 
 - name: Copy Grafana dashboards
   ansible.builtin.copy:
     src: grafana/dashboards/
-    dest: "{{ grafana_data_dir }}/dashboards/"
+    dest: "{{ monitoring_grafana_data_dir }}/dashboards/"
     owner: "472"
     group: "472"
     mode: "0644"
@@ -110,19 +116,21 @@
 - name: Deploy Grafana contact points with secrets
   ansible.builtin.template:
     src: grafana/contactpoints.yml.j2
-    dest: "{{ grafana_provisioning_dir }}/alerting/contactpoints.yml"
+    dest: "{{ monitoring_grafana_provisioning_dir }}/alerting/contactpoints.yml"
+    mode: "0644"
   notify: Restart grafana
 
 - name: Copy Grafana alerting provisioning
   ansible.builtin.copy:
     src: grafana/provisioning/alerting/
-    dest: "{{ grafana_provisioning_dir }}/alerting/"
+    dest: "{{ monitoring_grafana_provisioning_dir }}/alerting/"
+    mode: "0644"
   notify: Restart grafana
 
 - name: Run Grafana container
   community.docker.docker_container:
     name: grafana
-    image: "{{ grafana_image }}"
+    image: "{{ monitoring_grafana_image }}"
     restart_policy: always
 
     ports:
@@ -139,17 +147,17 @@
       GF_SERVER_SERVE_FROM_SUB_PATH: "false"
 
     volumes:
-      - "{{ grafana_data_dir }}:/var/lib/grafana"
-      - "{{ grafana_provisioning_dir }}:/etc/grafana/provisioning"
+      - "{{ monitoring_grafana_data_dir }}:/var/lib/grafana"
+      - "{{ monitoring_grafana_provisioning_dir }}:/etc/grafana/provisioning"
 
 - name: Wait for Grafana to be ready
   ansible.builtin.uri:
     url: http://localhost:3000/login
     status_code: 200
-  register: grafana_health
+  register: monitoring_grafana_health
   retries: 10
   delay: 3
-  until: grafana_health.status == 200
+  until: monitoring_grafana_health.status == 200
 
 #
 # Install nginx and certbot
@@ -177,6 +185,7 @@
     src: /etc/nginx/sites-available/monitoring
     dest: /etc/nginx/sites-enabled/monitoring
     state: link
+    mode: "0644"
 
 #
 # Check if certificates exist
@@ -185,12 +194,12 @@
 - name: Check Grafana certificate
   ansible.builtin.stat:
     path: /etc/letsencrypt/live/grafana.dobro10k2.ru/fullchain.pem
-  register: grafana_cert
+  register: monitoring_grafana_cert
 
 - name: Check Prometheus certificate
   ansible.builtin.stat:
     path: /etc/letsencrypt/live/prometheus.dobro10k2.ru/fullchain.pem
-  register: prometheus_cert
+  register: monitoring_prometheus_certprometheus_cert
 
 #
 # Obtain certificates (only if missing)
@@ -203,7 +212,7 @@
     --non-interactive
     --agree-tos
     -m admin@dobro10k2.ru
-  when: not grafana_cert.stat.exists
+  when: not monitoring_grafana_cert.stat.exists
   changed_when: false
 
 - name: Obtain Prometheus certificate
@@ -213,7 +222,7 @@
     --non-interactive
     --agree-tos
     -m admin@dobro10k2.ru
-  when: not prometheus_cert.stat.exists
+  when: not monitoring_prometheus_certprometheus_cert.stat.exists
   changed_when: false
 
 #
@@ -224,12 +233,13 @@
   ansible.builtin.template:
     src: nginx-monitoring-https.conf.j2
     dest: /etc/nginx/sites-available/monitoring
+    mode: "0644"
   notify: Reload nginx
 
 - name: Run nginx prometheus exporter
   community.docker.docker_container:
     name: nginx-exporter
-    image: "{{ nginx_exporter_image }}"
+    image: "{{ monitoring_nginx_exporter_image }}"
     state: started
     restart_policy: always
     command:
@@ -237,7 +247,7 @@
     networks:
       - name: "{{ monitoring_docker_network }}"
     ports:
-      - 127.0.0.1:{{ nginx_exporter_port }}:9113
+      - 127.0.0.1:{{ monitoring_nginx_exporter_port }}:9113
 
 - name: Include Loki tasks
   ansible.builtin.include_tasks: loki.yml
