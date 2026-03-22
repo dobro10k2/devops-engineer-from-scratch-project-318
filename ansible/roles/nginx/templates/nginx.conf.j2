@@ -31,7 +31,7 @@ server {
 
         # Allow only local machine and monitoring server
         allow 127.0.0.1;
-        allow 10.129.0.25;
+        allow {{ monitoring_server_ip }};
         deny all;
     }
 
