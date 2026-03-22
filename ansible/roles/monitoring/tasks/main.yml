@@ -45,7 +45,7 @@
 - name: Run Prometheus container
   community.docker.docker_container:
     name: prometheus
-    image: "{{ monitorung_prometheus_image }}"
+    image: "{{ monitoring_prometheus_image }}"
     restart_policy: always
 
     ports:
