@@ -1,5 +1,0 @@
----
-collections:
-  - name: community.docker
-  - name: prometheus.prometheus
-  - name: grafana.grafana
