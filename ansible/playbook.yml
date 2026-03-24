@@ -1,22 +1,15 @@
----
 - name: Configure application server
   hosts: app
   roles:
     - docker_setup
     - firewall
     - docker_network
-    - postgres
-    - minio
     - nginx
     - certbot
-    - node_exporter
-    - promtail
-
-- name: Deploy application
-  hosts: app
-  roles:
-    - role: docker_deploy
-      tags: deploy
+    - role: prometheus.prometheus.node_exporter
+      vars:
+        node_exporter_web_listen_address: "0.0.0.0:9100"
+    - role: grafana.grafana.promtail
 
 - name: Setup monitoring server
   hosts: monitoring

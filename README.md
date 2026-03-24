@@ -40,6 +40,27 @@ The project provides:
 
 ---
 
+## ⚙️ Ansible Collections
+
+The project uses official Ansible Galaxy collections instead of custom roles:
+
+collections:
+  - name: community.docker
+  - name: prometheus.prometheus
+  - name: grafana.grafana
+Used roles
+Collection	Role	Purpose
+prometheus.prometheus	node_exporter	host metrics
+grafana.grafana	promtail	log collection
+
+👉 This approach ensures:
+
+reliability
+maintainability
+less custom code
+
+---
+
 ## 🔌 Ports
 
 ### Public

@@ -10,26 +10,6 @@ management_port: 9090
 
 app_logs_dir: /opt/bulletin/logs
 
-postgres_container_name: postgres
-postgres_db: bulletins
-postgres_user: postgres
-postgres_data_dir: /opt/postgres/data
-
-spring_datasource_url: jdbc:postgresql://{{ postgres_container_name }}:5432/{{ postgres_db }}
-
-env_vars:
-  SPRING_PROFILES_ACTIVE: prod
-  SPRING_DATASOURCE_URL: "{{ spring_datasource_url }}"
-  SPRING_DATASOURCE_USERNAME: "{{ postgres_user }}"
-  MANAGEMENT_SERVER_PORT: "{{ management_port | string }}"
-  JAVA_OPTS: -Xms256m -Xmx512m
-
-minio_container_name: minio
-minio_data_dir: /opt/minio/data
-
-minio_console_port: 9001
-minio_api_port: 9000
-
 monitoring_server_ip: "{{ hostvars[groups['monitoring'][0]]['internal_ip'] }}"
 
 app_server_ip: "{{ hostvars[groups['app'][0]]['internal_ip'] }}"
@@ -37,7 +17,6 @@ app_server_ip: "{{ hostvars[groups['app'][0]]['internal_ip'] }}"
 prometheus_targets:
   node_exporter:
     - "{{ app_server_ip }}:9100"
-    - "{{ monitoring_server_ip }}:9100"
 
   application:
     - "{{ app_server_ip }}:9090"
@@ -49,20 +28,68 @@ nginx_status_url: http://{{ app_server_ip }}/nginx_status
 
 private_network_cidr: 10.129.0.0/24
 
-storage_s3:
-  bucket: bulletins
-  region: us-east-1
-  endpoint: http://minio:9000
-  cdn_url: http://board.dobro10k2.ru/storage
-
 loki_port: 3100
 loki_push_url: http://{{ monitoring_server_ip }}:{{ loki_port }}/loki/api/v1/push
 
-vault_env_vars:
-  SPRING_DATASOURCE_PASSWORD: "{{ vault_postgres_password }}"
-  STORAGE_S3_BUCKET: "{{ storage_s3.bucket }}"
-  STORAGE_S3_REGION: "{{ storage_s3.region }}"
-  STORAGE_S3_ENDPOINT: "{{ storage_s3.endpoint }}"
-  STORAGE_S3_ACCESSKEY: "{{ vault_minio_access_key }}"
-  STORAGE_S3_SECRETKEY: "{{ vault_minio_secret_key }}"
-  STORAGE_S3_CDNURL: "{{ storage_s3.cdn_url }}"
+# --- Runtime ---
+promtail_runtime_mode: "root"
+promtail_positions_path: "/var/lib/promtail"
+
+# --- Loki client (REQUIRED) ---
+promtail_clients:
+  - url: "http://{{ monitoring_server_ip }}:3100/loki/api/v1/push"
+
+# --- Scrape configs ---
+promtail_scrape_configs:
+
+  # =========================
+  # NGINX
+  # =========================
+  - job_name: nginx
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          app: nginx
+          env: prod
+          host: "{{ inventory_hostname }}"
+          __path__: /var/log/nginx/*.log
+
+    pipeline_stages:
+      - json:
+          expressions:
+            time: time
+            remote_addr: remote_addr
+            method: method
+            uri: uri
+            status: status
+
+  # =========================
+  # APP
+  # =========================
+  - job_name: app
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+
+    relabel_configs:
+
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/bulletin-board'
+        action: keep
+
+      - source_labels: ['__meta_docker_container_name']
+        target_label: container
+
+      - target_label: job
+        replacement: app
+
+      - target_label: app
+        replacement: bulletin-board
+
+      - target_label: env
+        replacement: prod
+
+      - target_label: host
+        replacement: "{{ inventory_hostname }}"
