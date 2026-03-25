@@ -42,22 +42,27 @@ The project provides:
 
 ## ⚙️ Ansible Collections
 
-The project uses official Ansible Galaxy collections instead of custom roles:
+The project uses **official Ansible Galaxy collections** instead of custom roles:
 
+```yaml
 collections:
   - name: community.docker
   - name: prometheus.prometheus
   - name: grafana.grafana
-Used roles
-Collection	Role	Purpose
-prometheus.prometheus	node_exporter	host metrics
-grafana.grafana	promtail	log collection
+```
+
+### Used roles
+
+| Collection            | Role          | Purpose        |
+| --------------------- | ------------- | -------------- |
+| prometheus.prometheus | node_exporter | host metrics   |
+| grafana.grafana       | promtail      | log collection |
 
 👉 This approach ensures:
 
-reliability
-maintainability
-less custom code
+* reliability
+* maintainability
+* less custom code
 
 ---
 
@@ -120,7 +125,7 @@ chmod 600 .vault_pass
 
 ```
 pip install ansible ansible-lint
-ansible-galaxy collection install -r ansible/requirements.yml
+ansible-galaxy collection install -r requirements.yml
 ```
 
 ---
@@ -128,31 +133,15 @@ ansible-galaxy collection install -r ansible/requirements.yml
 ## 4. Configure inventory
 
 ```
-ansible/inventory.ini
+inventory.ini
 ```
 
 ---
 
-## 5. Initial deployment
+## 5. Deploy infrastructure
 
 ```
 make setup
-```
-
----
-
-## 6. Deploy new version
-
-```
-make deploy
-```
-
----
-
-## 7. Rollback
-
-```
-make rollback TAG=<docker_tag>
 ```
 
 ---
@@ -368,24 +357,22 @@ http://localhost:3100
 ```
 .
 ├── Makefile
+├── inventory.ini
+├── requirements.yml
 └── ansible
-    ├── inventory.ini
     ├── playbook.yml
     ├── group_vars
     │   └── all
     │       ├── all.yml
-    │       └── vault.yml
+    │       ├── vault.yml
+    │       └── ports.yml
     └── roles
         ├── certbot
-        ├── docker_deploy
         ├── docker_network
         ├── docker_setup
         ├── firewall
-        ├── minio
         ├── monitoring
-        ├── nginx
-        ├── postgres
-        └── node_exporter
+        └── nginx
 ```
 
 ---
